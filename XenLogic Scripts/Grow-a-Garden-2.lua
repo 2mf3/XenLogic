@@ -1,6 +1,6 @@
 local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
 
--- Base de datos completa
+-- Tabla de semillas completa
 local ShopSeeds = {
     {Id = 1,  String = "Carrot",          Price = 1},
     {Id = 2,  String = "Strawberry",      Price = 10},
@@ -30,66 +30,45 @@ local ShopSeeds = {
     {Id = 26, String = "Dragon's Breath", Price = 90000000},
 }
 
-local function getSeedNames()
-    local names = {}
-    for _, seed in ipairs(ShopSeeds) do table.insert(names, seed.String) end
-    return names
-end
+local Window = WindUI:CreateWindow({ Title = "Grow a Garden 2 | XenLogic", Icon = "lucide:leaf", Resizable = true })
+local ShopTab = Window:Tab({ Title = "Tienda y Venta" })
 
-local Window = WindUI:CreateWindow({
-    Title = "Grow a Garden 2 | XenLogic",
-    Icon = "lucide:leaf",
-    Resizable = true
-})
-
--- Pestañas 
-local Tab = Window:Tab({ Title = "Ajustes" })
-local ShopTab = Window:Tab({ Title = "Tienda" })
-
--- Elementos 
-Tab:Slider({
-    Title = "Velocidad de Caminata",
-    Value = { Min = 16, Max = 100, Default = 16 },
-    Callback = function(Value)
-        local char = game.Players.LocalPlayer.Character
-        if char and char:FindFirstChild("Humanoid") then char.Humanoid.WalkSpeed = Value end
-    end
-})
-
-local selectedSeedName = ShopSeeds[1].String
-local autoBuyEnabled = false
+local selectedSeeds = {}
+local autoBuy = false
+local autoSell = false
+local sellInterval = 5
 
 ShopTab:Dropdown({
-    Title = "Seleccionar Semilla",
-    Values = getSeedNames(),
-    Callback = function(Option)
-        selectedSeedName = Option
-    end
+    Title = "Seleccionar Semillas (Múltiple)",
+    Values = (function() local t = {} for _, s in ipairs(ShopSeeds) do table.insert(t, s.String) end return t end)(),
+    Multi = true,
+    Callback = function(v) selectedSeeds = v end
 })
 
-ShopTab:Toggle({
-    Title = "Auto-Comprar",
-    Callback = function(state)
-        autoBuyEnabled = state
-        if autoBuyEnabled then
-            task.spawn(function()
-                while autoBuyEnabled do
-                    local remote = game:GetService("ReplicatedStorage"):FindFirstChild("SharedModules")
-                    if remote and remote:FindFirstChild("Packet") then
-                        local event = remote.Packet:FindFirstChild("RemoteEvent")
-                        if event then
-                            local buf = buffer.create(32)
-                            buffer.writeu8(buf, 0, 0x09)
-                            buffer.writeu8(buf, 1, 0x00)
-                            buffer.writeu8(buf, 2, 0x01)
-                            buffer.writeu8(buf, 3, #selectedSeedName)
-                            buffer.writestring(buf, 4, selectedSeedName)
-                            event:FireServer(buffer.readbuffer(buf, 0, 4 + #selectedSeedName))
-                        end
-                    end
-                    task.wait(0.6)
-                end
-            end)
-        end
-    end
+ShopTab:Toggle({ Title = "Auto-Comprar", Callback = function(v) autoBuy = v end })
+ShopTab:Slider({ 
+    Title = "Segundos para Auto-Venta", 
+    Value = { Min = 1, Max = 300, Default = 5 }, 
+    Callback = function(v) sellInterval = v end 
 })
+ShopTab:Toggle({ Title = "Auto-Vender Inventario", Callback = function(v) autoSell = v end })
+
+-- Lógica de Auto-Compra y Auto-Venta
+task.spawn(function()
+    local remote = game:GetService("ReplicatedStorage").SharedModules.Packet.RemoteEvent
+    
+    while true do
+        if autoBuy then
+            for _, name in pairs(selectedSeeds) do
+                -- Formato capturado: "x\0\nStrawberry" -> 'x' es char 120, \0 es null, \n es length
+                local lenChar = string.char(#name)
+                remote:FireServer(buffer.fromstring("x\0" .. lenChar .. name))
+            end
+        end
+        if autoSell then
+            -- Formato capturado: "\171\0\17"
+            remote:FireServer(buffer.fromstring("\171\0\17"))
+        end
+        task.wait(autoSell and sellInterval or 0.6)
+    end
+end)
