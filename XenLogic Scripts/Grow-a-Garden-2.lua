@@ -1,6 +1,6 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- Base de datos completa extraída del juego
+-- Base de datos completa integrada
 local ShopSeeds = {
     {Id = 1,  String = "Carrot",          Price = 1},
     {Id = 2,  String = "Strawberry",      Price = 10},
@@ -30,7 +30,7 @@ local ShopSeeds = {
     {Id = 26, String = "Dragon's Breath", Price = 90000000},
 }
 
--- Función para obtener la lista de nombres automáticamente
+-- Función para extraer los nombres automáticamente para el Dropdown
 local function getSeedNames()
     local names = {}
     for _, seed in ipairs(ShopSeeds) do
@@ -42,7 +42,7 @@ end
 local Window = Rayfield:CreateWindow({
    Name = "Grow a Garden 2 - XenLogic",
    LoadingTitle = "Iniciando Interfaz...",
-   LoadingSubtitle = "Sistema de Tienda Dinámico",
+   LoadingSubtitle = "Sistema de Tienda Completo",
    ConfigurationSaving = { Enabled = false },
    KeySystem = false
 })
@@ -66,7 +66,7 @@ local ShopTab = Window:CreateTab("Tienda", nil)
 local selectedSeedName = ShopSeeds[1].String
 local autoBuyEnabled = false
 
-local Dropdown = ShopTab:CreateDropdown({
+ShopTab:CreateDropdown({
    Name = "Seleccionar Semilla",
    Options = getSeedNames(),
    CurrentOption = selectedSeedName,
@@ -75,7 +75,7 @@ local Dropdown = ShopTab:CreateDropdown({
    end,
 })
 
-local Toggle = ShopTab:CreateToggle({
+ShopTab:CreateToggle({
    Name = "Auto-Comprar",
    CurrentValue = false,
    Callback = function(Value)
@@ -83,19 +83,19 @@ local Toggle = ShopTab:CreateToggle({
       if autoBuyEnabled then
          task.spawn(function()
             while autoBuyEnabled do
-               local remoteEvent = game:GetService("ReplicatedStorage"):WaitForChild("SharedModules"):WaitForChild("Packet"):WaitForChild("RemoteEvent")
-               
-               -- Construcción del Buffer (Opcode 0x09)
-               local buf = buffer.create(32)
-               buffer.writeu8(buf, 0, 0x09) 
-               buffer.writeu8(buf, 1, 0x00)
-               buffer.writeu8(buf, 2, 0x01)
-               buffer.writeu8(buf, 3, #selectedSeedName)
-               buffer.writestring(buf, 4, selectedSeedName)
-               
-               remoteEvent:FireServer(buffer.readbuffer(buf, 0, 4 + #selectedSeedName))
-               
-               task.wait(0.6) -- Respetando el Rate Limit
+               local remote = game:GetService("ReplicatedStorage"):FindFirstChild("SharedModules")
+               if remote then
+                   remote = remote.Packet.RemoteEvent
+                   local buf = buffer.create(32)
+                   buffer.writeu8(buf, 0, 0x09) 
+                   buffer.writeu8(buf, 1, 0x00)
+                   buffer.writeu8(buf, 2, 0x01)
+                   buffer.writeu8(buf, 3, #selectedSeedName)
+                   buffer.writestring(buf, 4, selectedSeedName)
+                   
+                   remote:FireServer(buffer.readbuffer(buf, 0, 4 + #selectedSeedName))
+               end
+               task.wait(0.6) 
             end
          end)
       end
