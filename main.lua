@@ -4,6 +4,8 @@ local gameID = game.PlaceId
 local scripts = {
     [97598239454123] = "Grow-a-Garden-2.lua",
     [189707] = "Natural-Disaster-Survival.lua"
+    [104715542330896] = "BlockSpin.lua"
+
 }
 
 local scriptName = scripts[gameID]
