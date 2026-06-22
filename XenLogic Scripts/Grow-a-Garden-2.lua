@@ -1,13 +1,4 @@
--- Carga robusta de Rayfield
-local Rayfield = nil
-local success, err = pcall(function()
-    Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-end)
-
-if not success or not Rayfield then
-    warn("Error cargando Rayfield: " .. tostring(err))
-    return
-end
+local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
 
 -- Base de datos completa
 local ShopSeeds = {
@@ -45,66 +36,60 @@ local function getSeedNames()
     return names
 end
 
-local Window = Rayfield:CreateWindow({
-   Name = "Grow a Garden 2 - XenLogic",
-   LoadingTitle = "Iniciando Interfaz...",
-   LoadingSubtitle = "Sistema de Tienda Integrado",
-   ConfigurationSaving = { Enabled = false },
-   KeySystem = false
+local Window = WindUI:CreateWindow({
+    Title = "Grow a Garden 2 | XenLogic",
+    Icon = "lucide:leaf",
+    Resizable = true
 })
 
--- Ajustes
-local Tab = Window:CreateTab("Ajustes", nil)
-Tab:CreateSlider({
-   Name = "Velocidad de Caminata",
-   Range = {16, 100},
-   Increment = 1,
-   Suffix = " studs",
-   CurrentValue = 16,
-   Callback = function(Value)
-      local char = game.Players.LocalPlayer.Character
-      if char and char:FindFirstChild("Humanoid") then char.Humanoid.WalkSpeed = Value end
-   end,
+-- Pestañas 
+local Tab = Window:Tab({ Title = "Ajustes" })
+local ShopTab = Window:Tab({ Title = "Tienda" })
+
+-- Elementos 
+Tab:Slider({
+    Title = "Velocidad de Caminata",
+    Value = { Min = 16, Max = 100, Default = 16 },
+    Callback = function(Value)
+        local char = game.Players.LocalPlayer.Character
+        if char and char:FindFirstChild("Humanoid") then char.Humanoid.WalkSpeed = Value end
+    end
 })
 
--- Tienda
-local ShopTab = Window:CreateTab("Tienda", nil)
 local selectedSeedName = ShopSeeds[1].String
 local autoBuyEnabled = false
 
-ShopTab:CreateDropdown({
-   Name = "Seleccionar Semilla",
-   Options = getSeedNames(),
-   CurrentOption = selectedSeedName,
-   Callback = function(Option)
-      selectedSeedName = Option
-   end,
+ShopTab:Dropdown({
+    Title = "Seleccionar Semilla",
+    Values = getSeedNames(),
+    Callback = function(Option)
+        selectedSeedName = Option
+    end
 })
 
-ShopTab:CreateToggle({
-   Name = "Auto-Comprar",
-   CurrentValue = false,
-   Callback = function(Value)
-      autoBuyEnabled = Value
-      if autoBuyEnabled then
-         task.spawn(function()
-            while autoBuyEnabled do
-               local remote = game:GetService("ReplicatedStorage"):FindFirstChild("SharedModules")
-               if remote and remote:FindFirstChild("Packet") then
-                   local event = remote.Packet:FindFirstChild("RemoteEvent")
-                   if event then
-                       local buf = buffer.create(32)
-                       buffer.writeu8(buf, 0, 0x09) 
-                       buffer.writeu8(buf, 1, 0x00)
-                       buffer.writeu8(buf, 2, 0x01)
-                       buffer.writeu8(buf, 3, #selectedSeedName)
-                       buffer.writestring(buf, 4, selectedSeedName)
-                       event:FireServer(buffer.readbuffer(buf, 0, 4 + #selectedSeedName))
-                   end
-               end
-               task.wait(0.6) 
-            end
-         end)
-      end
-   end,
+ShopTab:Toggle({
+    Title = "Auto-Comprar",
+    Callback = function(state)
+        autoBuyEnabled = state
+        if autoBuyEnabled then
+            task.spawn(function()
+                while autoBuyEnabled do
+                    local remote = game:GetService("ReplicatedStorage"):FindFirstChild("SharedModules")
+                    if remote and remote:FindFirstChild("Packet") then
+                        local event = remote.Packet:FindFirstChild("RemoteEvent")
+                        if event then
+                            local buf = buffer.create(32)
+                            buffer.writeu8(buf, 0, 0x09)
+                            buffer.writeu8(buf, 1, 0x00)
+                            buffer.writeu8(buf, 2, 0x01)
+                            buffer.writeu8(buf, 3, #selectedSeedName)
+                            buffer.writestring(buf, 4, selectedSeedName)
+                            event:FireServer(buffer.readbuffer(buf, 0, 4 + #selectedSeedName))
+                        end
+                    end
+                    task.wait(0.6)
+                end
+            end)
+        end
+    end
 })
