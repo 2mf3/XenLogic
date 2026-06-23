@@ -1,27 +1,24 @@
--- 1. Cargar dependencias (WindUI)
-local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/UI-Lib/WindUI/main/WindUI.lua"))()
+-- main.lua corregido
+local gameID = game.PlaceId
 
--- 2. Definir la función que crea tu interfaz (Tu script de juego)
-local function StartMyScript()
-    local Window = WindUI:CreateWindow({
-        Title = "XenLogic | Grow a Garden 2",
-        Folder = "XenLogicData"
-    })
+local scripts = {
+    [97598239454123] = "Grow-a-Garden-2.lua",
+    [189707] = "Natural-Disaster-Survival.lua"
+    [104715542330896] = "BlockSpin.lua"
 
-    local Tab = Window:Tab({ Title = "Main" })
-    Tab:Label({ Title = "¡Bienvenido a Grow a Garden 2!" })
-    -- Aquí pones tus botones de AutoFarm, etc.
+}
+
+local scriptName = scripts[gameID]
+
+if scriptName then
+    local success, err = pcall(function()
+        local url = "https://raw.githubusercontent.com/2mf3/XenLogic/main/XenLogic%20Scripts/" .. scriptName
+        loadstring(game:HttpGet(url))()
+    end)
+    
+    if not success then
+        warn("XenLogic Error al cargar: " .. tostring(err))
+    end
+else
+    warn("XenLogic: No hay script para este juego (ID: " .. gameID .. ")")
 end
-
--- 3. INTEGRACIÓN DE JNKIE (El Key System)
--- Este código ejecutará Jnkie. Si la llave es correcta, Jnkie cargará el script.
--- Como tú ya tienes tu link de Jnkie, lo usamos directamente:
-
-local JNKIE_URL = "https://jnkie.com/flow/4a783689-bf6a-4414-b2bc-725acbf2310e"
-
-local success, err = pcall(function()
-    loadstring(game:HttpGet(JNKIE_URL))()
-end)
-
--- IMPORTANTE: Si Jnkie se encarga de todo, el script debería inyectarse solo.
--- Si Jnkie te pide un "destino", pon el link de este mismo archivo loader.lua.
