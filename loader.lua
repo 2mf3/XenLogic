@@ -9,9 +9,9 @@ local scripts = {
 local scriptName = scripts[gameID]
 
 if scriptName then
+    local url = "https://raw.githubusercontent.com/2mf3/XenLogic/main/XenLogic%20Scripts/" .. scriptName
+    
     local success, err = pcall(function()
-        -- URL Raw de tu carpeta de scripts
-        local url = "https://raw.githubusercontent.com/2mf3/XenLogic/main/XenLogic%20Scripts/" .. scriptName
         loadstring(game:HttpGet(url))()
     end)
     
