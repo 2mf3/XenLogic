@@ -1,4 +1,3 @@
-@ -1,86 +1,88 @@
 local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
 
 -- Tabla de semillas
