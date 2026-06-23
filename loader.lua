@@ -1,41 +1,27 @@
--- ═══ XENLOGIC FINAL LOADER ═══
+-- 1. Cargar dependencias (WindUI)
+local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/UI-Lib/WindUI/main/WindUI.lua"))()
 
-local gameID = game.PlaceId
--- La URL que tú me diste para obtener la llave
-local JNKIE_KEY_SYSTEM = "https://jnkie.com/get-key/xenlogic"
+-- 2. Definir la función que crea tu interfaz (Tu script de juego)
+local function StartMyScript()
+    local Window = WindUI:CreateWindow({
+        Title = "XenLogic | Grow a Garden 2",
+        Folder = "XenLogicData"
+    })
 
--- Tu base de datos de juegos (Asegúrate de que los nombres coincidan exactamente con tus archivos en GitHub)
-local scripts = {
-    [97598239454123] = "Grow-a-Garden-2.lua",
-    [189707] = "Natural-Disaster-Survival.lua",
-    [104715542330896] = "BlockSpin.lua"
-}
-
--- Función para cargar el script desde tu repo
-local function loadGameScript(scriptName)
-    local url = "https://raw.githubusercontent.com/2mf3/XenLogic/main/XenLogic%20Scripts/" .. scriptName
-    local success, err = pcall(function()
-        loadstring(game:HttpGet(url))()
-    end)
-    
-    if not success then
-        warn("XenLogic Error al cargar el juego: " .. tostring(err))
-    end
+    local Tab = Window:Tab({ Title = "Main" })
+    Tab:Label({ Title = "¡Bienvenido a Grow a Garden 2!" })
+    -- Aquí pones tus botones de AutoFarm, etc.
 end
 
--- 1. Ejecutamos el flujo de Jnkie
+-- 3. INTEGRACIÓN DE JNKIE (El Key System)
+-- Este código ejecutará Jnkie. Si la llave es correcta, Jnkie cargará el script.
+-- Como tú ya tienes tu link de Jnkie, lo usamos directamente:
+
+local JNKIE_URL = "https://jnkie.com/flow/4a783689-bf6a-4414-b2bc-725acbf2310e"
+
 local success, err = pcall(function()
-    loadstring(game:HttpGet(JNKIE_KEY_SYSTEM))()
+    loadstring(game:HttpGet(JNKIE_URL))()
 end)
 
--- 2. Si Jnkie carga, procedemos a buscar el juego
-if success then
-    local scriptName = scripts[gameID]
-    if scriptName then
-        loadGameScript(scriptName)
-    else
-        warn("XenLogic: Script no encontrado para este PlaceID: " .. gameID)
-    end
-else
-    warn("XenLogic: Error en el sistema de llaves Jnkie: " .. tostring(err))
-end
+-- IMPORTANTE: Si Jnkie se encarga de todo, el script debería inyectarse solo.
+-- Si Jnkie te pide un "destino", pon el link de este mismo archivo loader.lua.
